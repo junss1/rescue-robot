@@ -105,7 +105,7 @@ tf2_geometry_msgs
 nav2_simple_commander
 explore_lite_msgs
 irobot_create_msgs
-PortAudio / ALSA audio backend
+PortAudio / ALSA audio libraries
 ```
 
 ---
@@ -160,7 +160,7 @@ Robot6 구조 로봇의 미션 흐름을 제어하는 패키지입니다.
 | `rescue_control_node` | 도착 이후 구조 세션, 비전 분석, TTS 요청 제어 |
 | `rescue_nav_node` | Robot5 검출 이벤트 기반 Nav2 이동 제어 |
 | `rescue_stt_node` | 구조 안내 음성 출력 및 음성 응답 처리 |
-| `rescue_ui` | Flask 기반 웹 관제 UI 실행 |
+| `rescue_ui` | Flask 기반 웹 관제 UI |
 
 주요 역할:
 
@@ -174,23 +174,15 @@ Robot6 구조 로봇의 미션 흐름을 제어하는 패키지입니다.
 
 ## 6. 시스템 FLOW
 
-```text
-camera_system
-    ↓
-robot5_person_search
-    ↓
-victim detection event
-    ↓
-rescue_bot navigation
-    ↓
-arrival event
-    ↓
-vision analysis
-    ↓
-TTS / STT interaction
-    ↓
-next mission or docking
-```
+![Flow](docs/Flow_chart.png)
+
+1. 카메라 시스템이 현장 영상을 수신합니다.
+2. 객체 감지 시스템이 사람과 붕괴 상황을 감지합니다.
+3. Robot5가 탐색 중 피해자를 검출합니다.
+4. 피해자 검출 이벤트가 구조 로봇으로 전달됩니다.
+5. Robot6가 피해자 위치 기반으로 구조 위치까지 이동합니다.
+6. 도착 후 피해자 상태 분석과 음성 안내를 수행합니다.
+7. 웹 UI를 통해 구조 상황과 로봇 상태를 모니터링합니다.
 
 ---
 
@@ -377,8 +369,6 @@ src/robot5_person_search/yolo11n.pt
 src/rescue_bot/rescue_bot/models/yolo11n-pose.pt
 ```
 
-모델 파일 크기가 커질 경우 Git LFS 관리를 권장합니다.
-
 ---
 
 ## 12. Hardware Configuration
@@ -395,7 +385,7 @@ src/rescue_bot/rescue_bot/models/yolo11n-pose.pt
 | Vision | YOLO |
 | Web UI | Flask |
 | Audio | STT / TTS |
-| Communication | ROS 2 Topic/Event 기반 |
+| 의사소통 | ROS 2 Topic/Event 기반 |
 
 ---
 
@@ -412,8 +402,6 @@ export SRD_FLASK_PORT='5000'
 export RESCUE_SIREN_PATH='/path/to/siren.mp3'
 ```
 
-공개 저장소에서는 실제 비밀번호, API 키, 토큰을 코드에 직접 작성하지 않는 것을 권장합니다.
-
 ---
 
 ## 14. 주의사항
@@ -426,6 +414,3 @@ export RESCUE_SIREN_PATH='/path/to/siren.mp3'
 
 ---
 
-## 15. 라이선스
-
-이 프로젝트는 Apache-2.0 라이선스를 기준으로 정리했습니다.
