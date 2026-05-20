@@ -1,223 +1,262 @@
-# 경계 시스템 자동화
+# 다중 로봇 기반 재난 구조 탐색·관제 시스템
 
-[![Demo Video](docs/recue-robot.png)](https://youtu.be/Xig3LvbgLYU)
+[![Demo Video](docs/rescue-robot.png)](https://youtu.be/MMzPYvMR2ZU)
 ↑ 이미지 클릭 시 데모 영상을 확인할 수 있습니다.
 
-YOLO 기반 영상 인식 결과와 ROS 2 토픽/액션 흐름을 이용해 협동로봇의 추적, 인증, 후속 동작을 제어하는 프로젝트입니다.
+재난 상황 시나리오를 가정한 다중 로봇 기반 구조 시스템입니다.
 
-이 프로젝트는 카메라 영상에서 대상의 위치를 검출하고, 화면 중심 대비 정규화 오차(`error_norm`)를 계산한 뒤 Doosan 로봇의 TCP 속도 명령(`speedl`)에 반영합니다. 인증 결과에 따라 경례 또는 사격 동작을 실행합니다.
+카메라 감지 시스템, 탐색 로봇의 사람 검출 이벤트, 구조 로봇의 이동/비전 분석/음성 안내/웹 관제를 하나의 ROS 2 워크스페이스에서 통합 실행할 수 있도록 구성했습니다.
+
+이 프로젝트는 카메라 영상 기반 객체 감지와 탐색 이벤트를 이용해 구조 로봇의 후속 행동을 자동화합니다. Robot5가 탐색 중 피해자를 검출하면, Robot6가 해당 위치 기반 구조 미션을 수행하고 비전 분석 및 음성 상호작용을 진행합니다.
 
 ---
 
 ## 1. 프로젝트 개요
 
-- 분야: 경계/감시 상황을 가정한 협동로봇 자동화
-- 주요 기술: ROS 2 Humble, Python, YOLO, OpenCV, ROS 2 Action, Doosan Robot API
-- 로봇 기준: Doosan M0609 설정 기준
-- 주요 구성:
-  - 영상 인식 노드
-  - TCP 추종 제어 노드
-  - 인증 Action 서버
-  - 메인 오케스트레이터 노드
-  - 경례/사격 동작 노드
-  - PyQt5 기반 모니터링 UI
-  - SQLite 기반 로그 노드
+* 분야: 재난 구조 로봇 / 실내 탐색 / 피해자 감지 / 구조 관제
+* 주요 기술: ROS 2 Humble, Python, OpenCV, YOLO, Flask, STT/TTS
+* 기준 환경: Ubuntu 22.04, ROS 2 Humble, Python 3.10
+* 주요 구성:
+
+  * 다중 카메라 감지 노드
+  * 탐색 로봇 사람 검출 패키지
+  * 구조 미션 제어 노드
+  * Nav2 기반 이동 제어
+  * 피해자 분석 및 음성 안내 노드
+  * 웹 기반 구조 관제 UI
 
 ---
 
 ## 2. 프로젝트 목표
 
-- 카메라 영상에서 대상을 탐지하고 화면 중심 기준 오차를 계산합니다.
-- 정규화된 2D 오차값을 로봇 TCP 속도 제어 입력으로 사용합니다.
-- 대상이 일정 조건을 만족하면 `lock_done` 상태를 발생시킵니다.
-- `lock_done` 이후 인증 절차를 수행하고, 인증 결과에 따라 작업을 분기합니다.
-- UI와 로그 노드를 통해 영상, 상태, 이벤트 기록을 확인할 수 있도록 구성합니다.
+* 카메라 영상에서 사람과 붕괴 상황을 감지합니다.
+
+- 탐색 로봇이 실내 탐색 중 피해자 검출 이벤트를 생성합니다.
+- 구조 로봇이 검출 위치를 기반으로 자동 이동합니다.
+- 도착 후 비전 분석 및 음성 기반 구조 절차를 수행합니다.
+- 웹 UI를 통해 구조 상황과 ROS 데이터를 모니터링합니다.
 
 ---
 
 ## 3. 저장소 구조
 
 ```text
-Eye-in-Hand-Camera/
+rescue-robot-workspace/
 ├── README.md
+├── LICENSE
 ├── requirements.txt
 ├── .gitignore
-├── data/ (실행 시 자동 생성)
-│   └── camera_data/
-├── docs/
-│   ├── Flow_chart.png
-│   └── eye_in_hand.png
 └── src/
-    ├── cobot2/
-    │   ├── cobot2/
+    ├── camera_system/
+    │   ├── camera_system/
     │   ├── launch/
-    │   ├── resource/
-    │   │   └── weights/
+    │   ├── models/
     │   ├── package.xml
-    │   ├── setup.py
-    │   └── setup.cfg
-    └── cobot2_interfaces/
-        └── action/
-            └── Auth.action
+    │   └── setup.py
+    │
+    ├── robot5_person_search/
+    │   ├── robot5_person_search/
+    │   ├── launch/
+    │   ├── package.xml
+    │   └── setup.py
+    │
+    └── rescue_bot/
+        ├── rescue_bot/
+        │   ├── analyzer/
+        │   ├── models/
+        │   └── web/
+        ├── docs/
+        ├── launch/
+        ├── package.xml
+        └── setup.py
 ```
 
 ### 폴더 설명
 
-| 경로 | 설명 |
-|---|---|
-| `src/cobot2/` | 메인 실행 패키지 |
-| `src/cobot2/cobot2/` | ROS 2 노드 소스 코드 |
-| `src/cobot2/launch/` | 통합 실행 launch 파일 |
-| `src/cobot2/resource/weights/` | YOLO / Wakeword 모델 파일 위치 |
-| `src/cobot2_interfaces/` | ROS 2 Action 인터페이스 패키지 |
-| `data/camera_data/` | 실행 중 생성된 SQLite 로그 DB 위치 |
+| 경로                               | 설명                  |
+| -------------------------------- | ------------------- |
+| `src/camera_system/`             | 카메라 감지 및 붕괴 감지 패키지  |
+| `src/robot5_person_search/`      | 탐색 중 사람 검출 이벤트 패키지  |
+| `src/rescue_bot/`                | 구조 미션 제어 및 웹 UI 패키지 |
+| `src/rescue_bot/rescue_bot/web/` | Flask 기반 웹 관제 UI    |
+| `src/rescue_bot/docs/`           | 런타임 계약 및 문서         |
 
 ---
 
 ## 4. 외부 의존성
 
-이 저장소에는 doosan-robot2를 포함하지 않습니다.
+이 저장소에는 ROS 2 시스템 패키지를 포함하지 않습니다.
 
-같은 ROS 2 워크스페이스의 src/ 폴더에 별도로 설치해야 합니다.
+아래 패키지는 외부 환경에 별도로 설치해야 합니다.
 
 ```bash
-cd ~/ros2_ws/src
-git clone -b humble https://github.com/DoosanRobotics/doosan-robot2.git
+rosdep install --from-paths src --ignore-src -r -y
 ```
 
-최종 워크스페이스 구조 예시는 다음과 같습니다.
+추가적으로 다음 패키지 구성이 필요합니다.
 
 ```text
-ros2_ws/
-└── src/
-    ├── Eye-in-Hand-Camera/
-    │   └── src/
-    │       ├── cobot2/
-    │       └── cobot2_interfaces/
-    └── doosan-robot2/
+Nav2
+TurtleBot4 packages
+rosbridge_server
+web_video_server
+cv_bridge
+tf2_ros
+nav2_simple_commander
 ```
 
 ---
 
 ## 5. 주요 패키지
 
-### 5-1. `cobot2`
+### 5-1. `camera_system`
 
-메인 실행 패키지입니다.
+YOLO 기반 객체 감지 및 붕괴 감지를 수행하는 패키지입니다.
 
-| 실행 이름 | 역할 |
-|---|---|
-| `yolo_camera` | 카메라 영상 기반 대상 탐지, 추적 ID 유지, `error_norm` 발행 |
-| `tcp_follow` | `error_norm`을 수신해 Doosan `speedl` 속도 명령으로 변환 |
-| `orchestrator` | `lock_done`, 인증, 경례/사격 작업 흐름 제어 |
-| `auth_action` | ROS 2 Action 기반 인증 서버 |
-| `salute` | 인증 성공 시 경례 동작 수행 |
-| `shoot` | 인증 실패 누적 시 사격 동작 수행 |
-| `safety_monitor` | 로봇 상태 확인 및 안전 이벤트 발행 |
-| `follow_ui_node` | PyQt5 기반 영상/이벤트 모니터링 UI |
-| `follow_logger_node` | 이벤트 및 이미지 스냅샷 로그 저장 |
+| 실행 이름               | 역할                   |
+| ------------------- | -------------------- |
+| `camera_publisher`  | USB 카메라 영상 발행        |
+| `detection_node`    | YOLO 기반 사람 감지        |
+| `overlay_node`      | Detection Overlay 생성 |
+| `collapse_detector` | 붕괴 감지 이벤트 생성         |
 
-### 5-2. `cobot2_interfaces`
+주요 출력:
 
-ROS 2 Action 정의 패키지입니다.
+```text
+/output/cam01
+/output/cam02
+/detection/cam01/person
+/detection/cam02/person
+/alert/cam01/collapse
+/alert/cam02/collapse
+```
 
-| Action | 용도 |
-|---|---|
-| `Auth.action` | 인증 요청, 결과, 피드백 전달 |
+### 5-2. `robot5_person_search`
+
+Robot5 탐색 중 피해자 검출 이벤트를 생성하는 패키지입니다.
+
+| 실행 이름                       | 역할             |
+| --------------------------- | -------------- |
+| `person_event_detector`     | 피해자 검출 이벤트 생성  |
+| `explore_detect_supervisor` | 탐색 상태 및 이벤트 관리 |
+
+주요 역할:
+
+* 실내 탐색 중 사람 감지
+* 피해자 방향/위치 이벤트 생성
+* 구조 로봇 연동 이벤트 발행
+
+### 5-3. `rescue_bot`
+
+Robot6 구조 로봇 미션을 제어하는 패키지입니다.
+
+| 실행 이름                 | 역할            |
+| --------------------- | ------------- |
+| `rescue_control_node` | 구조 미션 흐름 제어   |
+| `rescue_nav_node`     | Nav2 기반 이동 제어 |
+| `rescue_stt_node`     | 음성 인식 처리      |
+| `rescue_ui`           | 웹 기반 구조 관제 UI |
+
+주요 역할:
+
+* 구조 위치 이동
+* 도착 이벤트 처리
+* 피해자 상태 분석
+* TTS/STT 기반 구조 대화
+* 웹 UI 기반 관제
 
 ---
 
 ## 6. 시스템 FLOW
-![Flow](docs/Flow_chart.png)
-1. 카메라 이미지 토픽에서 영상을 수신합니다.
-2. `yolo_camera`가 YOLO 추론을 수행합니다.
-3. 추적 기능이 켜져 있으면 Ultralytics `track()`과 `bytetrack.yaml` 설정을 사용합니다.
-4. 대상의 중심 또는 마스크 중심 기반 aim point를 계산합니다.
-5. aim point와 화면 중심의 차이를 `error_norm`으로 정규화합니다.
-6. `tcp_follow`가 `error_norm`을 수신합니다.
-7. deadzone, EMA 필터, 속도 제한을 적용한 뒤 `speedl` 명령을 생성합니다.
-8. 대상이 기준 오차 이내로 유지되면 `lock_done`이 발행됩니다.
-9. `orchestrator`가 `lock_done`을 받아 인증 절차를 시작합니다.
-10. 인증 성공 시 `salute`, 인증 실패 누적 시 `shoot` 동작을 실행합니다.
-11. 작업 완료 후 추적 상태를 다시 활성화합니다.
+
+```text
+camera_system
+    ↓
+robot5_person_search
+    ↓
+victim detection event
+    ↓
+rescue_bot navigation
+    ↓
+arrival event
+    ↓
+vision analysis
+    ↓
+TTS / STT interaction
+    ↓
+next mission or docking
+```
 
 ---
 
 ## 7. Technical Highlights
 
-### 7-1. 2D Image Error 기반 TCP 추종
+### 7-1. Multi-Robot Event Pipeline
 
-본 프로젝트는 카메라 영상에서 계산한 2D 오차를 로봇 TCP 속도 명령으로 변환합니다.
-
-```text
-camera image
-→ YOLO detection / tracking
-→ aim point
-→ normalized image error
-→ deadzone / EMA filter
-→ speedl velocity command
-```
-
-### 7-2. Vision / Control 분리
-
-`yolo_camera`는 로봇 좌표를 직접 계산하지 않습니다. 대신 `/follow/error_norm`만 발행합니다.
-
-`tcp_follow`는 영상 처리 내부 구조를 알 필요 없이 `error_norm`을 받아 속도 명령을 생성합니다.
-
-이 구조는 영상 인식 모델 교체와 로봇 제어 파라미터 튜닝을 분리할 수 있다는 장점이 있습니다.
-
-### 7-3. Lock 기반 인증 게이트
-
-대상이 화면 중심 기준으로 일정 조건을 만족하면 `lock_done`이 발행됩니다. 이후 `orchestrator`가 인증 Action을 호출합니다.
+탐색 로봇과 구조 로봇을 이벤트 기반으로 연결했습니다.
 
 ```text
-TRACK
-→ LOCK_DONE
-→ AUTH
-→ SALUTE or SHOOT
-→ TRACK
+Robot5 Detection
+→ Victim Event
+→ Robot6 Dispatch
+→ Arrival Event
+→ Rescue Interaction
 ```
 
-인증 성공 시 경례 동작, 인증 실패 누적 시 사격 동작으로 분기합니다.
+탐색과 구조 로직을 분리하여 확장성과 유지보수성을 높였습니다.
 
-### 7-4. 안전 제한 로직
+### 7-2. Vision / Navigation / Voice 분리
 
-`tcp_follow`에는 다음 제한 로직이 포함되어 있습니다.
+구조 시스템을 기능 계층 기준으로 분리했습니다.
 
-- `/follow/enable` 비활성화 시 추종 중지
-- target timeout 발생 시 제어 입력 무시
-- deadzone 적용
-- EMA 필터 적용
-- Y/Z 속도 제한
-- Base Y/Z 위치 제한
-- J4 하한 보호 로직
+```text
+Vision Layer
+→ Navigation Layer
+→ Rescue Interaction Layer
+```
+
+각 노드는 ROS 2 토픽 및 이벤트 기반으로 연결됩니다.
+
+### 7-3. Web 기반 구조 관제
+
+Flask 기반 웹 UI를 통해 다음 정보를 확인할 수 있습니다.
+
+* 구조 이벤트 상태
+* 카메라 스트림
+* ROS 데이터
+* 미션 진행 상태
+
+### 7-4. Victim Interaction Flow
+
+구조 로봇은 도착 후 음성 상호작용을 수행합니다.
+
+```text
+Arrival
+→ Victim Analysis
+→ TTS Request
+→ STT Response
+→ Next Action
+```
 
 ---
 
 ## 8. 주요 토픽
 
-### Vision / Follow
+### Detection / Event
 
-| 토픽 | 타입 | 설명 |
-|---|---|---|
-| `/follow/error_norm` | `Float32MultiArray` | 화면 중심 대비 정규화 오차 `[ex, ey]` |
-| `/follow/enable` | `Bool` | 추적/추종 활성화 여부 |
-| `/follow/lock_done` | `Bool` | 대상 락온 완료 상태 |
-| `/follow/annotated_image` | `sensor_msgs/Image` | UI 표시용 주석 이미지 |
-| `/follow/ui_event` | `String` | UI/로그용 이벤트 메시지 |
+| 토픽                        | 타입              | 설명         |
+| ------------------------- | --------------- | ---------- |
+| `/detection/cam01/person` | Detection Event | 사람 검출 이벤트  |
+| `/alert/cam01/collapse`   | Bool/Event      | 붕괴 감지 이벤트  |
+| `/robot5/person_event`    | Event           | 피해자 검출 이벤트 |
 
-### Orchestrator / Task
+### Rescue Mission
 
-| 토픽 | 타입 | 설명 |
-|---|---|---|
-| `/orchestrator/start` | `String` | 수동 인증 시작 입력 |
-| `/orchestrator/trigger` | `Bool` | 외부 트리거 기반 시작 |
-| `/orchestrator/status` | `String` | 상태 출력 |
-| `/salute_trigger` | `Bool` | 경례 동작 시작 |
-| `/salute_done` | `Bool` | 경례 동작 완료 |
-| `/shoot_trigger` | `Bool` | 사격 동작 시작 |
-| `/shoot_done` | `Bool` | 사격 동작 완료 |
-| `/safety/event` | `String` | 안전 이벤트 |
+| 토픽                        | 타입     | 설명       |
+| ------------------------- | ------ | -------- |
+| `/robot6/mission/arrived` | Bool   | 구조 위치 도착 |
+| `/robot6/tts/request`     | String | 음성 안내 요청 |
+| `/robot6/tts/done`        | Bool   | 음성 출력 완료 |
 
 ---
 
@@ -236,53 +275,29 @@ mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 ```
 
-### 9-3. Doosan ROS 2 패키지 설치
+### 9-3. 프로젝트 클론
 
 ```bash
-git clone -b humble https://github.com/DoosanRobotics/doosan-robot2.git
+git clone <repository-url> rescue-robot-workspace
 ```
 
-### 9-4. 이 프로젝트 클론
+### 9-4. Python 의존성 설치
 
 ```bash
-cd ~/ros2_ws/src
-git clone https://github.com/junss1/Eye-in-Hand-Camera.git
-```
-
-### 9-5. Python 의존성 설치
-
-프로젝트에서 사용하는 일부 Python 패키지는 pip 설치가 필요할 수 있습니다.
-
-```bash
-cd ~/ros2_ws/src/Eye-in-Hand-Camera
+cd rescue-robot-workspace
 pip install -r requirements.txt
 ```
 
-### 9-6. 환경 변수 설정
-
-STT, 키워드 생성 등 OpenAI API를 사용하는 노드는 `OPENAI_API_KEY`가 필요합니다.
+### 9-5. ROS 의존성 설치
 
 ```bash
-export OPENAI_API_KEY="your_api_key"
+rosdep install --from-paths src --ignore-src -r -y
 ```
 
-또는 로컬 개발 환경에서만 `.env` 파일을 사용할 수 있습니다.
-
-```text
-OPENAI_API_KEY=your_api_key
-```
-
-### 9-7. 빌드
-
-실제 ROS 2 패키지는 저장소 내부의 `src/` 폴더에 있습니다.
+### 9-6. 빌드
 
 ```bash
-cd ~/ros2_ws
-rosdep install -r --from-paths src --ignore-src --rosdistro humble -y
-
-colcon build --symlink-install \
-  --base-paths src/Eye-in-Hand-Camera/src src/doosan-robot2
-
+colcon build --symlink-install
 source install/setup.bash
 ```
 
@@ -290,73 +305,61 @@ source install/setup.bash
 
 ## 10. 실행 방법
 
-### 10-1. 통합 실행
+### 10-1. camera_system 실행
 
 ```bash
-ros2 launch cobot2 cobot2.launch.py
+ros2 launch camera_system camera_system.launch.py
 ```
 
-현재 launch 파일은 내부 변수 `REAL_SWITCH = True` 기준으로 실제 로봇 모드를 선택합니다.
-
-```python
-REAL_SWITCH = True
-REAL = {"mode": "real", "host": "192.168.1.100", "port": "12345", "model": "m0609"}
-VIRTUAL = {"mode": "virtual", "host": "127.0.0.1", "port": "12345", "model": "m0609"}
-```
-
-실제 로봇 IP와 가상/실제 모드 전환 방식은 현장 환경에 맞게 수정해야 합니다.
-
-### 10-2. 개별 노드 실행
+### 10-2. robot5_person_search 실행
 
 ```bash
-ros2 run cobot2 yolo_camera
-ros2 run cobot2 tcp_follow
-ros2 run cobot2 auth_action
-ros2 run cobot2 orchestrator
-ros2 run cobot2 follow_ui_node
-ros2 run cobot2 follow_logger_node
-ros2 run cobot2 safety_monitor
-ros2 run cobot2 salute
-ros2 run cobot2 shoot
+ros2 launch robot5_person_search robot5_person_search.launch.py
+```
+
+### 10-3. rescue_bot 실로봇 런타임 실행
+
+```bash
+ros2 launch rescue_bot rescue_real.launch.py
+```
+
+### 10-4. rescue_bot 웹 UI 실행
+
+```bash
+ros2 launch rescue_bot rescue_web.launch.py
 ```
 
 ---
 
 ## 11. 모델 파일
 
-기본 모델 경로는 `src/cobot2/resource/weights/` 기준으로 정리하는 것을 권장합니다.
-
 ```text
-src/cobot2/resource/weights/
-├── day.pt
-├── night.pt
-└── hello_rokey_8332_32.tflite
+src/camera_system/models/best26.pt
+src/camera_system/models/yolov8n-seg.pt
+src/robot5_person_search/yolo11n.pt
+src/rescue_bot/rescue_bot/models/yolo11n-pose.pt
 ```
 
 ---
 
 ## 12. Hardware Configuration
 
-실제 사용 환경에 따라 달라질 수 있으나, 코드 기준 주요 전제는 다음과 같습니다.
-
-| 항목 | 내용 |
-|---|---|
-| Robot | Doosan M0609 기준 설정 |
-| Robot API | `DSR_ROBOT2` |
-| Camera Input | ROS 2 `sensor_msgs/Image` 토픽 |
-| Default Color Topic | `/camera/camera/color/image_raw` |
-| Default IR Topic | `/camera/camera/infra1/image_rect_raw` |
-| UI | PyQt5 |
-| Logging | SQLite |
-| External Device | `shoot_node`에서 `/dev/ttyACM0` 시리얼 포트 사용 |
+| 항목             | 내용                   |
+| -------------- | -------------------- |
+| OS             | Ubuntu 22.04         |
+| ROS            | ROS 2 Humble         |
+| Navigation     | Nav2                 |
+| Robot Platform | TurtleBot4 기반        |
+| Vision         | YOLO                 |
+| Web UI         | Flask                |
+| Audio          | STT / TTS            |
+| 의사소통  | ROS 2 Topic/Event 기반 |
 
 ---
 
 ## 13. 주의사항
 
-- `doosan-robot2`는 외부 의존성으로 관리하는 것을 권장합니다.
-- 실제 로봇 실행 전 로봇 IP, TCP/Tool 설정, 안전 정지 조건을 현장 환경에 맞게 확인해야 합니다.
-- `cobot2.launch.py`의 실제/가상 모드 전환은 현재 launch argument가 아니라 코드 내부 변수로 관리됩니다.
-
----
-
+* Nav2 및 TurtleBot4 관련 패키지는 외부 환경에 설치해야 합니다.
+* 실제 로봇 실행 전 카메라 장치, 오디오 장치, 네임스페이스 설정을 환경에 맞게 수정해야 합니다.
+* 웹 UI 실행 시 `rosbridge_server`, `web_video_server` 설치가 필요합니다.
+* 공개 환경에서는 Flask 로그인 정보를 환경변수 기반으로 관리하는 것을 권장합니다.
