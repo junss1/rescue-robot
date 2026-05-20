@@ -11,7 +11,7 @@
 # - src/robot5_person_search
 #
 # 설치 예시:
-#   python3 -m pip install -r /home/gom/rokey_ws/requirements.txt
+#   python3 -m pip install -r requirements.txt
 #
 # 주의:
 # - 아래 목록은 pip로 설치하는 Python 패키지 기준이다.

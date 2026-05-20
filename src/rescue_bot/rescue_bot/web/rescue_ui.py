@@ -57,7 +57,7 @@ except ImportError:
 APP_HOST = os.getenv('SRD_FLASK_HOST', '0.0.0.0')
 APP_PORT = int(os.getenv('SRD_FLASK_PORT', '5000'))
 APP_DEBUG = os.getenv('SRD_FLASK_DEBUG', 'false').lower() == 'true'
-APP_SECRET_KEY = os.getenv('SRD_SECRET_KEY', 'srd-day5-dev-key')
+APP_SECRET_KEY = os.getenv('SRD_SECRET_KEY', 'change-this-secret')
 DASHBOARD_VERSION = 'v1.0'
 LOGIN_USERNAME = os.getenv('SRD_LOGIN_USERNAME', 'admin')
 LOGIN_PASSWORD = os.getenv('SRD_LOGIN_PASSWORD', '1234')

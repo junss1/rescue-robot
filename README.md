@@ -1,6 +1,6 @@
 # 다중 로봇 기반 재난 구조 탐색·관제 시스템
 
-[![Demo Video](docs/recue-robot.png)](https://youtu.be/MMzPYvMR2ZU)
+[![Demo Video](docs/rescue-robot.png)](https://youtu.be/MMzPYvMR2ZU)
 ↑ 이미지 클릭 시 데모 영상을 확인할 수 있습니다.
 
 재난 상황 시나리오를 가정한 다중 로봇 기반 구조 시스템입니다.
@@ -395,7 +395,7 @@ src/rescue_bot/rescue_bot/models/yolo11n-pose.pt
 | Vision | YOLO |
 | Web UI | Flask |
 | Audio | STT / TTS |
-| 의사소통 | ROS 2 Topic/Event 기반 |
+| Communication | ROS 2 Topic/Event 기반 |
 
 ---
 
