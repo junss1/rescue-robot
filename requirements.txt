@@ -1,0 +1,48 @@
+# requirements.txt v0.000 2026-03-17
+# [이번 버전에서 수정된 사항]
+# - camera_system, rescue_bot, robot5_person_search 공용 Python 의존성 파일 추가
+# - pip 설치 대상과 ROS/apt 설치 대상을 구분해서 정리
+
+# ----------------------------------------------------------------------
+# Workspace Python requirements
+# 대상 패키지:
+# - src/camera_system
+# - src/rescue_bot
+# - src/robot5_person_search
+#
+# 설치 예시:
+#   python3 -m pip install -r /home/gom/rokey_ws/requirements.txt
+#
+# 주의:
+# - 아래 목록은 pip로 설치하는 Python 패키지 기준이다.
+# - ROS2 패키지(rclpy, cv_bridge, tf2_ros, nav2, turtlebot4_navigation 등)는
+#   apt/rosdep/배포판 패키지로 설치해야 한다.
+# ----------------------------------------------------------------------
+
+# Common numeric / vision
+numpy>=1.23
+opencv-python>=4.8
+
+# YOLO / inference
+ultralytics>=8.3
+torch>=2.1
+torchvision>=0.16
+
+# rescue_bot web
+Flask>=3.0
+
+# rescue_bot STT / TTS
+pygame>=2.5
+SpeechRecognition>=3.10
+openai-whisper>=20231117
+gTTS>=2.5
+PyAudio>=0.2.13
+
+# ----------------------------------------------------------------------
+# ROS/OS runtime requirements (not installed by pip here)
+# - ROS2 Python/msgs: rclpy, sensor_msgs, std_msgs, geometry_msgs, nav_msgs
+# - TF / bridge: tf2_ros, tf2_geometry_msgs, cv_bridge
+# - Navigation: nav2_simple_commander, turtlebot4_navigation, explore_lite_msgs
+# - Launch/web integration: launch, launch_ros, rosbridge_server, web_video_server
+# - Audio backend packages may also require system libraries for PortAudio/ALSA
+# ----------------------------------------------------------------------
