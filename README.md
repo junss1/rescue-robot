@@ -350,7 +350,7 @@ ros2 launch rescue_bot rescue_real.launch.py
 ros2 launch rescue_bot rescue_web.launch.py
 ```
 
-호환용 런치 파일:
+통합 실행 런치 파일::
 
 ```bash
 ros2 launch rescue_bot rescue_system.launch.py
@@ -385,7 +385,7 @@ src/rescue_bot/rescue_bot/models/yolo11n-pose.pt
 | Vision | YOLO |
 | Web UI | Flask |
 | Audio | STT / TTS |
-| 의사소통 | ROS 2 Topic/Event 기반 |
+| Communication | ROS 2 Topic/Event 기반 |
 
 ---
 
