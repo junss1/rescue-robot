@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ROS 2 / colcon
+build/
+install/
+log/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment / secrets
+.env
+*.env
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Runtime artifacts
+*.db
+*.sqlite
+*.sqlite3
+*.log
