@@ -1,31 +1,3 @@
-<!-- welcome_center_srd.html v1.102 2026-03-16 -->
-<!-- [이번 버전에서 수정된 사항] -->
-<!-- - CAM 02 YOLO 소스를 다시 기존 /robot6/image_result 토픽으로 되돌림 -->
-<!-- - CAM 02 YOLO 및 History 스냅샷 소스를 /robot6/image_result/compressed 기준으로 조정 -->
-<!-- - collapse를 제외한 History 저장 항목에 당시 robot6/image_result 스냅샷을 함께 저장하고 카드에 썸네일을 표시하도록 확장 -->
-<!-- - collapse를 제외한 History 저장 항목에 robot6 amcl_pose를 함께 적재하고 카드 하단에 좌표를 표시하도록 확장 -->
-<!-- - CAM 01에 YOLO/RAW 전환 버튼을 추가하고 YOLO는 /robot5/detector_yolo, RAW는 기존 robot5 preview 토픽을 사용하도록 확장 -->
-<!-- - 메인 패널의 시작/종료 버튼을 화면에서 숨기도록 주석 처리 -->
-<!-- - direct MJPEG 스트림 stale 상태를 API로 감시해 마지막 프레임이 남지 않도록 placeholder 강제 복귀를 추가 -->
-<!-- - CAM 03, CAM 04 UI 스트림을 web_video_server 대신 Flask direct MJPEG relay(/stream/cam03, /stream/cam04)로 연결 -->
-<!-- - CAM 03 스트림 토픽을 실제 overlay 출력과 일치하도록 /output/cam01/compressed 로 복구 -->
-<!-- - 시작/종료 버튼이 실제 ROS 구독자 규격에 맞게 /robot5/start, /robot/stop Bool 토픽으로 발행되도록 수정 -->
-<!-- - CAM 03 스트림 토픽만 /output/cam01/compressed 에서 /output/cam01 로 변경 -->
-<!-- - 관리용 버전 헤더 추가 -->
-<!-- - CAM 01 입력 토픽을 /robot5/oakd/rgb/preview/image_raw 로 변경 -->
-<!-- - CAM 02 raw 입력 토픽을 /robot6/oakd/rgb/preview/image_raw 로 변경 -->
-<!-- - CAM 03, CAM 04 리셋 명령을 토픽별 String payload(reset:cam01, reset:cam02)로 변경 -->
-<!-- - /alert/cam01/collapse, /alert/cam02/collapse 의 True 수신 시 붕괴 감지 팝업 표시 추가 -->
-<!-- - 붕괴 감지 시 브라우저 alert 대신 조회 모달과 같은 인앱 팝업을 표시하도록 변경 -->
-<!-- - /api/alerts 폴링으로 붕괴 감지 DB/History/팝업 연동을 추가하고 브라우저 토픽 구독 의존도를 낮춤 -->
-<!-- - 로봇 상태 토픽 수신 끊김 watchdog을 추가하고 ROS error 시 카메라/상태 패널도 즉시 오프라인 처리하도록 보강 -->
-<!-- - collapse 저장을 /api/record_collapse 방식으로 통일하고, 메인 화면 /api/alerts 폴링은 다시 비활성화 -->
-<!-- - 로봇 상태 watchdog 끊김 판정 시간을 5초에서 10초로 완화 -->
-<!-- - CAM 03, CAM 04가 web_video_server 의 ros_compressed 방식으로 /output/cam01, /output/cam02/compressed 를 직접 구독하도록 변경 -->
-<!-- - collapse 감지 시 메인 History 패널에도 즉시 카드가 추가되도록 보강 -->
-<!-- - 사용하지 않는 session result 카드 경로를 제거하고 ALERTS를 collapse 실시간 카운터로 정리 -->
-<!-- - /robot6/session/result는 DB에만 저장하고 메인/조회 History에는 표시하지 않도록 정리 -->
-<!-- - UI direct subscribe 토픽(/rescue/victim_pose_stamped, /robot6/tts/request, /robot6/tts/done, /robot6/victim_voice_reply, /robot6/session/result, /robot6/session/status)의 QoS 계약을 reliable + volatile + keep_last(1) 기준으로 정리 -->
 <!DOCTYPE html>
 <html lang="ko">
 

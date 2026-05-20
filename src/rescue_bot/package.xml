@@ -4,7 +4,7 @@
   <name>rescue_bot</name>
   <version>0.0.0</version>
   <description>Rescue robot orchestration package for Robot6 mission control, navigation, STT/TTS, and web UI.</description>
-  <maintainer email="ahwkt46@gmail.com">chans</maintainer>
+  <maintainer email="maintainer@example.com">maintainer</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>

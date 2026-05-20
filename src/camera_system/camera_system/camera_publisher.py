@@ -1,8 +1,3 @@
-# camera_publisher.py v0.001 2026-03-16
-# [이번 버전에서 수정된 사항]
-# - 내장캠이 USB 카메라로 오인식되지 않도록 sysfs 장치 경로 기반 USB 판별을 추가
-"""통합 카메라 발행기 - USB 웹캠 자동 감지 및 발행"""
-
 import os
 import sys
 import io

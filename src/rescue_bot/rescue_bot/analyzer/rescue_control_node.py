@@ -1,15 +1,8 @@
-# rescue_control_node.py v0.911 2026-03-17
-# [이번 버전에서 수정된 사항]
-# - UI direct-subscribe 토픽(/robot6/session/result, /robot6/session/status, /robot6/tts/request, /rescue/victim_pose_stamped)의 durability를 VOLATILE로 통일
-# - /robot6/tts/done 구독 QoS도 VOLATILE로 맞춰 STT와 호환되도록 조정
-# - /robot/stop, /robot6/mission/timeout, BACKOFF 제한, 카메라 QoS 변경 사항은 유지
-# - /rescue/victim_pose_stamped 출력 용도를 nav 직접 입력이 아닌 UI/로그/후속 확장용으로 명확화
-# - /robot6/tts/request 계약이 상태 문자열임을 주석/로그 기준으로 정리
-
 from __future__ import annotations
 
 import json
 import math
+import os
 import threading
 import time
 from collections import Counter
@@ -34,6 +27,7 @@ from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 from std_msgs.msg import Bool, String
 from cv_bridge import CvBridge
 from tf2_ros import Buffer, TransformListener
+from ament_index_python.packages import get_package_share_directory
 try:
     from .rescue_vision_core import AnalyzerConfig, PoseEmergencyEngine
 except ImportError:
@@ -45,6 +39,27 @@ def clamp(x: float, lo: float, hi: float) -> float:
 
 
 class Robot6ControlNode(Node):
+    def _find_model_path(self, model_path: str) -> str:
+        if os.path.isabs(model_path) and os.path.exists(model_path):
+            return model_path
+
+        if os.path.exists(model_path):
+            return model_path
+
+        try:
+            installed_path = os.path.join(get_package_share_directory('rescue_bot'), 'models', os.path.basename(model_path))
+            if os.path.exists(installed_path):
+                return installed_path
+        except Exception:
+            pass
+
+        package_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        local_path = os.path.join(package_dir, 'models', os.path.basename(model_path))
+        if os.path.exists(local_path):
+            return local_path
+
+        return model_path
+
     def __init__(self) -> None:
         super().__init__("robot6_control_node")
 
@@ -90,7 +105,7 @@ class Robot6ControlNode(Node):
         self.declare_parameter("depth_offset_m", -0.04)
         self.declare_parameter("robot_id", "robot6")
 
-        model_path = str(self.get_parameter("model_path").value)
+        model_path = self._find_model_path(str(self.get_parameter("model_path").value))
         rgb_topic = str(self.get_parameter("rgb_topic").value)
         depth_topic = str(self.get_parameter("depth_topic").value)
         camera_info_topic = str(self.get_parameter("camera_info_topic").value)

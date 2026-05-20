@@ -1,10 +1,3 @@
-# rescue_web.launch.py v0.102 2026-03-15
-# [이번 버전에서 수정된 사항]
-# - web UI, rosbridge, web_video_server를 함께 실행하는 웹 전용 런치 파일 추가
-# - 선택적으로 브라우저를 자동 실행하는 옵션 추가
-# - rescue_ui를 console script 대신 Python 모듈 직접 실행으로 변경해 설치 메타데이터 의존성 제거
-# - 기본 실행 시 브라우저가 자동으로 열리도록 open_browser 기본값과 browser_url 기본값을 조정
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition

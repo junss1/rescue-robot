@@ -5,7 +5,7 @@
 
 재난 상황 시나리오를 가정한 다중 로봇 기반 구조 시스템입니다.
 
-이 프로젝트는 다중 카메라 감지 결과, Robot5의 피해자 검출 이벤트, Robot6의 구조 미션 제어를 ROS 2 기반으로 연결합니다. Robot5가 탐색 중 피해자를 검출하면 Robot6가 해당 위치로 이동하고, 도착 후 비전 분석, 음성 안내, 웹 관제 흐름을 수행합니다.
+이 프로젝트는 다중 카메라 감지 결과, Robot5(탐색 로봇)의 피해자 검출 이벤트, Robot6(구조 로봇)의 구조 미션 제어를 ROS 2 기반으로 연결합니다. Robot5가 탐색 중 피해자를 검출하면 Robot6가 해당 위치로 이동하고, 도착 후 비전 분석, 음성 안내, 웹 관제 흐름을 수행합니다.
 
 ---
 
@@ -61,7 +61,8 @@ rescue-robot/
     │   ├── resource/
     │   ├── package.xml
     │   ├── setup.py
-    │   └── setup.cfg
+    │   ├── setup.cfg
+    │   └── yolo11n.pt
     └── rescue_bot/
         ├── rescue_bot/
         │   ├── analyzer/
@@ -83,7 +84,7 @@ rescue-robot/
 | `src/robot5_person_search/` | Robot5 탐색 및 피해자 검출 이벤트 패키지 |
 | `src/rescue_bot/` | Robot6 구조 미션 제어, 비전 분석, 음성 처리, 웹 UI 패키지 |
 | `src/rescue_bot/docs/` | Robot6 런타임 계약 문서 |
-| `docs/` | README 이미지 및 시스템 다이어그램 자료 |
+| `docs/` | README 이미지, 시스템 다이어그램 이미지, drawio 원본 파일 |
 
 ---
 
@@ -148,7 +149,7 @@ Robot5가 탐색 중 사람을 검출하면 구조 로봇에서 사용할 피해
 주요 역할:
 
 - 탐색 중 사람 감지
-- 피해자 위치 및 방향 정보 생성
+- 피해자 위치 및 검출 이벤트 생성
 - Robot6 구조 미션과 연동되는 이벤트 발행
 
 ### 5-3. `rescue_bot`
@@ -214,7 +215,7 @@ Vision Layer
 
 이 구조는 감지 모델, 이동 정책, 음성 상호작용 로직을 독립적으로 수정할 수 있다는 장점이 있습니다.
 
-### 7-3. Collapse / Victim Event Monitoring
+### 7-3. Event Monitoring System
 
 `camera_system`은 카메라별 객체 감지와 붕괴 감지 이벤트를 생성합니다.
 
@@ -246,12 +247,13 @@ Flask 기반 웹 UI에서 구조 진행 상태를 확인할 수 있습니다.
 
 | 토픽 | 타입 | 설명 |
 |---|---|---|
-| `/camera/{camera}/raw` | `sensor_msgs/Image` | 카메라 원본 이미지 |
+| `/camera/{camera}/raw` | `sensor_msgs/CompressedImage` | 카메라 원본 압축 이미지 |
 | `/detection/{camera}/person` | `std_msgs/String` | 카메라별 사람 감지 결과 |
 | `/detection/{camera}/turtlebot` | `std_msgs/String` | 카메라별 로봇 감지 결과 |
-| `/detection/summary/person` | `std_msgs/String` | 전체 카메라 기준 사람 감지 요약 |
-| `/detection/summary/turtlebot` | `std_msgs/String` | 전체 카메라 기준 로봇 감지 요약 |
-| `/alert/{camera}/collapse` | `std_msgs/String` | 카메라별 붕괴 감지 이벤트 |
+| `/detection/summary/person` | `std_msgs/Int32` | 전체 카메라 기준 사람 감지 요약 |
+| `/detection/summary/turtlebot` | `std_msgs/Int32` | 전체 카메라 기준 로봇 감지 요약 |
+| `/alert/{camera}/collapse` | `std_msgs/Bool` | 카메라별 붕괴 감지 이벤트 |
+| `/alert/{camera}/diff` | `sensor_msgs/CompressedImage` | 붕괴 감지 차분 이미지 |
 | `/output/{camera}/compressed` | `sensor_msgs/CompressedImage` | 웹 UI 표시용 압축 이미지 |
 
 ### Robot5 / Search
@@ -260,6 +262,9 @@ Flask 기반 웹 UI에서 구조 진행 상태를 확인할 수 있습니다.
 |---|---|---|
 | `/robot5/robot_pose_at_detection` | `geometry_msgs/PoseStamped` | 피해자 검출 시점의 Robot5 위치 |
 | `/robot5/victim_point` | `geometry_msgs/PointStamped` | 피해자 추정 위치 |
+| `/robot5/victim_event_json` | `std_msgs/String` | 피해자 검출 이벤트 정보 |
+| `/robot5/detector_yolo` | `sensor_msgs/Image` | 피해자 검출 시각화 이미지 |
+| `/robot5/scan_active` | `std_msgs/Bool` | 탐색 감지 활성화 상태 |
 | `/robot/stop` | `std_msgs/Bool` | 복귀 및 도킹 트리거 |
 
 ### Robot6 / Rescue
@@ -274,7 +279,8 @@ Flask 기반 웹 UI에서 구조 진행 상태를 확인할 수 있습니다.
 | `/robot6/victim_voice_reply` | `std_msgs/String` | 피해자 음성 응답 결과 |
 | `/robot6/session/status` | `std_msgs/String` | 구조 세션 상태 |
 | `/robot6/session/result` | `std_msgs/String` | 구조 세션 결과 |
-| `/robot6/image_result` | `std_msgs/String` | 피해자 비전 분석 결과 |
+| `/robot6/image_result` | `sensor_msgs/Image` | 피해자 비전 분석 이미지 |
+| `/robot6/image_result/compressed` | `sensor_msgs/CompressedImage` | 피해자 비전 분석 압축 이미지 |
 
 ---
 
@@ -350,7 +356,7 @@ ros2 launch rescue_bot rescue_real.launch.py
 ros2 launch rescue_bot rescue_web.launch.py
 ```
 
-통합 실행 런치 파일::
+통합 실행 런치 파일:
 
 ```bash
 ros2 launch rescue_bot rescue_system.launch.py
@@ -402,6 +408,8 @@ export SRD_FLASK_PORT='5000'
 export RESCUE_SIREN_PATH='/path/to/siren.mp3'
 ```
 
+웹 UI 기본 로그인 값은 테스트 실행을 위해 `admin / 1234`로 설정되어 있습니다. 공개 환경이나 실제 운영 환경에서는 위 환경변수로 계정을 변경하는 것을 권장합니다.
+
 ---
 
 ## 14. 주의사항
@@ -411,6 +419,3 @@ export RESCUE_SIREN_PATH='/path/to/siren.mp3'
 - 웹 UI 실행 시 `rosbridge_server`, `web_video_server` 설치가 필요합니다.
 - `rescue_web.launch.py`는 기본적으로 로컬 브라우저 실행을 시도합니다.
 - 실로봇 실행 전 `/robot/stop`, `/robot6/cmd_vel` 등 제어 토픽 동작을 반드시 확인해야 합니다.
-
----
-

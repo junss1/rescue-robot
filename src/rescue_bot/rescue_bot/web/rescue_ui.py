@@ -1,32 +1,3 @@
-'''
-파일명: rescue_ui.py
-날짜: 2026-03-16
-버전: v1.100
-
-버전 변경사항
-- v1.200: collapse를 제외한 History 저장 항목에 당시 robot6/image_result 스트림 스냅샷을 파일로 보관하고 조회 카드에서 썸네일로 표시하도록 확장함
-- v1.100: collapse를 제외한 History 저장 항목에 robot6 amcl_pose를 함께 적재하고 alerts 조회 응답에서 카드 하단 표시용 pose 필드를 분리해 제공함
-- v1.006: direct MJPEG 스트림 stale 상태를 조회하는 API를 추가해 프론트에서 마지막 프레임을 강제로 숨길 수 있도록 보강함
-- v1.005: direct MJPEG 스트림이 일정 시간 stale 상태면 응답을 종료해 UI가 마지막 프레임 대신 placeholder로 복귀하도록 조정함
-- v1.004: CAM 03 direct stream 구독 토픽을 실제 overlay 출력인 /output/cam01/compressed 로 복구함
-- v1.003: CAM 03 direct stream 토픽을 /output/cam01/compressed 에서 /output/cam01 로 조정함
-- v1.002: UI alerts 조회 응답에서 사용하지 않는 emotion 필드를 제거함
-- v1.001: /robot6/session/result를 DB 전용으로 적재하고 빈 값은 null로 정규화하며, UI alerts 조회 목록에서는 제외함
-- v1.000: camera_system 최종 출력 토픽명을 /output/cam01/compressed, /output/cam02/compressed 로 정렬하고 Flask direct stream relay도 새 토픽을 구독하도록 조정함
-- v0.901: direct MJPEG 재시도 중 잘못 붙은 /stream/cam03&t=... 경로도 수용하도록 스트림 키 정규화를 추가함
-- v0.900: camera_system의 /output/cam01, /output/cam02 CompressedImage를 Flask 직접 MJPEG 스트리밍으로 중계해 CAM 03, CAM 04 표시를 web_video_server 의존 없이 지원함
-- v0.800: collapse 감지를 Flask API(/api/record_collapse) 저장 방식으로 변경하고, 기존 TTS/pose와 동일한 DB 적재 경로로 통일함
-- v0.700: collapse alert ROS 토픽(/alert/cam01/collapse, /alert/cam02/collapse)을 백엔드에서 직접 구독해 SQLite/History 연동과 UI 팝업 폴링 기반 표시를 지원함
-- v0.600: victim_pose_stamped 히스토리 저장 API를 추가하고, History 패널에 요구조자 좌표 기록을 포함할 수 있도록 확장함
-- v0.500: UI용 API(/api/system_status, /api/robot_state, /api/alerts, /api/map_summary)를 추가하고, 향후 ROS/Gazebo 실제 연동 전환이 쉽도록 데이터 구성 함수를 분리함
-- v0.400: rescue_ui를 메인 Flask 서버로 고정하고, ROS 웹 연동 설정(rosbridge/map/alert/stream)을 템플릿 컨텍스트로 분리해 welcome 템플릿 기준으로 통합함
-- v0.300: UI/day5/login 라우트는 유지하면서, SQLite 연동 준비를 위한 서비스 함수 분리 및 설정 상수를 추가함
-- v0.200: 로그인 페이지, 세션 인증, 로그아웃, 인증 보호 데코레이터를 추가해 대시보드 접근을 로그인 기반으로 변경함
-- v0.110: day5 형태에 맞게 Flask 서버를 render_template 기반으로 리팩토링하고 대시보드 UI를 templates로 분리함
-- v0.020: 앱 팩토리(create_app), 설정 상수, health check 라우트를 추가해 실행 구조를 정리함
-- v0.001: resetMapView 호출 대비 템플릿 연동과 기본 실행부를 안정화함
-'''
-
 import hmac
 import json
 import os

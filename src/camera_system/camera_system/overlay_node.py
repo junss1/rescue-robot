@@ -1,12 +1,3 @@
-# overlay_node.py v0.003 2026-03-16
-# [이번 버전에서 수정된 사항]
-# - 붕괴 경고 문구를 우측 상단으로 이동하고 크기를 줄여 화면을 덜 가리도록 조정
-"""
-Overlay Node
-- 원본 이미지와 detection 결과를 합쳐서 시각화
-- 타임스탐프 기반 버퍼 관리로 동기화
-"""
-
 import json
 from collections import OrderedDict
 from dataclasses import dataclass

@@ -1,11 +1,3 @@
-# rescue_stt_node.py v0.211 2026-03-17
-# [이번 버전에서 수정된 사항]
-# - UI direct-subscribe 토픽(/robot6/victim_voice_reply, /robot6/tts/done)과 /robot6/tts/request 구독의 durability를 VOLATILE로 통일
-# - /robot/stop 수신 시 진행 중인 STT 시나리오를 즉시 중단하는 기존 동작 유지
-# - 기존 siren_path 탐색, 임시 TTS 파일 처리 방식은 유지
-# - /robot6/tts/request 계약이 상태 문자열임을 주석으로 명확화
-# - 런타임 필수 외부 의존성(오디오 장치/파이썬 패키지) 안내 추가
-
 import os
 import re
 import tempfile
@@ -115,8 +107,6 @@ class RescueDialogueNode(Node):
         for parent in [script_dir, *script_dir.parents[:6]]:
             candidates.append(parent / 'siren.mp3')
 
-        candidates.append(Path.home() / 'rokey_ws' / 'siren.mp3')
-        candidates.append(Path('/home/jaylee/Downloads/siren.mp3'))
 
         checked = set()
         for candidate in candidates:

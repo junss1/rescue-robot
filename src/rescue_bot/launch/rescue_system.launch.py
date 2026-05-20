@@ -1,8 +1,3 @@
-# rescue_system.launch.py v0.100 2026-03-14
-# [이번 버전에서 수정된 사항]
-# - 실로봇 기본 런치를 rescue_real.launch.py로 분리
-# - 기존 파일명은 호환용 래퍼로 유지
-
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource

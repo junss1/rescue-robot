@@ -1,10 +1,3 @@
-# rescue_nav_node.py v0.401 2026-03-17
-# [이번 버전에서 수정된 사항]
-# - robot5 연동 입력을 /robot5/robot_pose_at_detection + /robot5/victim_point 기준으로 재구성
-# - stop/timeout/undock/predock/dock 흐름을 new nav 기준으로 레거시 실행 경로에 이식
-# - victim_point 부재/지연 시 robot5 pose orientation을 fallback yaw로 사용하도록 보강
-# - 현재 런타임 계약(robot5 입력 -> arrived -> control 세션 -> tts_done -> 다음 목표)을 주석으로 명확화
-
 """
 rescue_nav_node.py
 ==================

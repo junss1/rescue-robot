@@ -1,10 +1,3 @@
-# v0.620
-# file: srd_pose_emergency_core.py
-# date: 2026-03-11
-# changes:
-# - 세션 종료용 reset() 추가
-# - 대표점 픽셀(rep_point_px) 및 보조 중심점 export 추가
-# - 관제노드 victim_position 정확도 향상용 method 필드 추가
 """
 SRD Pose EmergencyLevel Core
 ======================
@@ -846,7 +839,7 @@ class PoseEmergencyEngine:
             # 5단계: 대망의 최종 위급 등급 산정 (WARNING? CRITICAL?)
             emergency_level = self._decide(visibility, posture, motion, trapped, seen_sec, state_sec)
 
-            # 5-1) 대표 포인트(Rep. Point) 추출 (v0.620 관제용 기능)
+            # 5-1) 대표 포인트(Rep. Point) 추출 (관제용 기능)
             rep_point, shoulder_center, hip_center, face_anchor, rep_method = self._extract_rep_points(
                 kps, kp_conf, clipped_box, visibility, frame.shape
             )

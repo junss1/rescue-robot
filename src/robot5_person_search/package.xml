@@ -4,7 +4,7 @@
   <name>robot5_person_search</name>
   <version>0.0.0</version>
   <description>Robot5 person search package for exploration supervision and victim detection event publishing.</description>
-  <maintainer email="hea0919@naver.com">rokey</maintainer>
+  <maintainer email="maintainer@example.com">maintainer</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>

@@ -14,6 +14,7 @@
 # -----------------------------------------------------------------------------
 
 import json
+import os
 import time
 import threading
 
@@ -31,6 +32,7 @@ from std_msgs.msg import Bool, String
 from tf2_geometry_msgs.tf2_geometry_msgs import do_transform_point  # noqa: F401
 from tf2_ros import Buffer, TransformListener
 from ultralytics import YOLO
+from ament_index_python.packages import get_package_share_directory
 
 
 def clamp(x, lo, hi):
@@ -44,11 +46,30 @@ def quat_to_yaw(q):
 
 
 class PersonEventDetector(Node):
+    def _find_model_path(self, model_file):
+        try:
+            installed_path = os.path.join(
+                get_package_share_directory('robot5_person_search'),
+                'models',
+                model_file,
+            )
+            if os.path.exists(installed_path):
+                return installed_path
+        except Exception:
+            pass
+
+        package_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        local_path = os.path.join(package_dir, model_file)
+        if os.path.exists(local_path):
+            return local_path
+
+        return model_file
+
     def __init__(self):
         super().__init__('person_event_detector')
 
         # ===== params =====
-        self.weights = 'yolo11n.pt'
+        self.weights = self._find_model_path('yolo11n.pt')
         self.target_class_id = 0
         self.conf_thres = 0.25
         self.infer_period = 0.20

@@ -1,8 +1,3 @@
-# rescue_real.launch.py v0.100 2026-03-17
-# [이번 버전에서 수정된 사항]
-# - 실로봇용 rescue_bot 노드(control/nav/stt) 실행 런치 파일 추가
-# - 실로봇 기준 런타임 계약(robot5 입력, arrived/control/stt 연계) 설명 보강
-
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
