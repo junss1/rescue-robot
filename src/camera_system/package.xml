@@ -6,7 +6,7 @@
   <description>ROS2 Camera System with YOLO Detection and Collapse Detection</description>
 
   <maintainer email="maintainer@example.com">maintainer</maintainer>
-  <license>Apache License 2.0</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
 

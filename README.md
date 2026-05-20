@@ -412,7 +412,13 @@ export RESCUE_SIREN_PATH='/path/to/siren.mp3'
 
 ---
 
-## 14. 주의사항
+## 14. License
+
+This project is licensed under the Apache License 2.0. See the `LICENSE` file for details.
+
+---
+
+## 15. 주의사항
 
 - Nav2, TurtleBot4, rosbridge, web_video_server 관련 패키지는 외부 환경에 설치해야 합니다.
 - 실제 로봇 실행 전 카메라 장치, 오디오 장치, 네임스페이스, Nav2 설정을 환경에 맞게 수정해야 합니다.
